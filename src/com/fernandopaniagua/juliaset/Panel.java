@@ -1,0 +1,152 @@
+package com.fernandopaniagua.juliaset;
+
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+/**
+ * Panel de dibujo del fractal
+ * 
+ * @author Fernando Paniagua
+ */
+public class Panel extends javax.swing.JPanel {
+
+    private BufferedImage bi;
+    private Graphics2D g2d;
+    private static final int ITERACCIONES = 255;
+    private static Complejo cConstante;
+    private static Color color;
+    private static int incremento;
+
+    /**
+     * Creates new form Panel
+     */
+    public Panel() {
+        initComponents();
+    }
+
+    /**
+     * Genera el fractal
+     * 
+     * @param cReal Parte real de la constante C
+     * @param cImaginaria Parte imaginaria de la constante C
+     * @param color Color del fractal (Color.RED, Color.GREEN, Color.BLUE)
+     * @param incremento Intensidad del color (a mayor número, mayor intensidad)
+     */
+    public void generar(String cReal, String cImaginaria, Color color, int incremento) {
+        try {
+            cConstante = new Complejo(Float.parseFloat(cReal), Float.parseFloat(cImaginaria));
+            this.color = color;
+            this.incremento = incremento;
+            bi = new BufferedImage(Frame.anchoScreen, Frame.altoScreen, BufferedImage.TYPE_INT_RGB);
+            g2d = bi.createGraphics();
+            g2d.clearRect(0, 0, this.getBounds().width, this.getBounds().height);
+            g2d.setColor(Color.black);
+            g2d.fillRect(0, 0, this.getBounds().width, this.getBounds().height);
+            int tono;
+            for (int x = 1; x <= Frame.anchoScreen; x++) {
+                for (int y = 1; y <= Frame.altoScreen; y++) {
+                    //Ajuste del valor Zo para cada pixel para centrar el fractal
+                    Complejo c1 = new Complejo(2.0 * 
+                            (x - Frame.anchoScreen / 2) / (Frame.anchoScreen / 2), 
+                            1.33 * (y - Frame.altoScreen / 2) / (Frame.altoScreen / 2));
+                    Complejo c2 = c1;
+                    for (int i = 0; i < ITERACCIONES; i++) {
+                        //f(z) = z^2 + c
+                        c2 = c2.getCuadrado();
+                        c2.suma(cConstante);
+                        int brillo = i * incremento;
+                        if (brillo > 255) {
+                            brillo = 255;
+                        }
+                        if (c2.getModulo() > 2) {
+                            if (color == Color.RED) {
+                                g2d.setColor(new Color(brillo, 0, 0));
+
+                            } else if (color == Color.GREEN) {
+                                g2d.setColor(new Color(0, brillo, 0));
+
+                            } else {
+                                g2d.setColor(new Color(0, 0, brillo));
+                            }
+                            g2d.drawLine(x, y, x, y);
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Introduzca valores válidos de c",
+                    "Julia Set Generator",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * Guarda el fractal en un fichero
+     */
+    public void guardar() {
+        JFileChooser chooser = new JFileChooser();
+        FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                "PNG file", "png");
+        chooser.setSelectedFile(new File("fractal.png"));
+        chooser.setFileFilter(filter);
+        int returnVal = chooser.showSaveDialog(this);
+        if (returnVal == JFileChooser.APPROVE_OPTION) {
+            try {
+                File outputfile = new File(chooser.getSelectedFile().getAbsolutePath());
+                ImageIO.write(bi, "png", outputfile);
+                JOptionPane.showMessageDialog(this,
+                        "Fichero generado correctamente",
+                        "Julia Set Generator",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this,
+                        "Error al guardar el fichero",
+                        "Julia Set Generator",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    @Override
+    public void paintComponent(Graphics g) {
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.drawImage(bi, null, 0, 0);
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        setBackground(new java.awt.Color(0, 102, 102));
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        this.setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 400, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 300, Short.MAX_VALUE)
+        );
+    }// </editor-fold>//GEN-END:initComponents
+
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // End of variables declaration//GEN-END:variables
+}
